@@ -1,0 +1,386 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Post-Modern Portfolio</title>
+    <style>
+        /* --- AESTHETIC VARIABLES --- */
+        :root {
+            --bg: #eaeaea;           /* Light Grey (Industrial) */
+            --ink: #111111;          /* Near Black */
+            --acid: #ccff00;         /* Neon Acid Green */
+            --grid-line: #bbbbbb;    /* Visible grid lines */
+            --font-serif: 'Times New Roman', Times, serif;
+            --font-sans: 'Helvetica Neue', Helvetica, Arial, sans-serif;
+            --font-mono: 'Courier New', Courier, monospace;
+        }
+
+        /* --- CORE SETUP --- */
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            cursor: none; /* Hiding default cursor for custom one */
+        }
+
+        body {
+            background-color: var(--bg);
+            color: var(--ink);
+            font-family: var(--font-sans);
+            overflow-x: hidden;
+        }
+
+        /* --- CUSTOM CURSOR --- */
+        .cursor {
+            width: 20px;
+            height: 20px;
+            background: var(--acid);
+            border-radius: 50%;
+            position: fixed;
+            pointer-events: none;
+            z-index: 9999;
+            transform: translate(-50%, -50%);
+            mix-blend-mode: difference; /* This creates the cool inversion effect */
+            transition: width 0.2s, height 0.2s;
+        }
+        
+        /* Expand cursor on hover */
+        .cursor.grow {
+            width: 80px;
+            height: 80px;
+            background: white;
+            border: 1px solid var(--ink);
+            mix-blend-mode: normal;
+            opacity: 0.8;
+        }
+
+        /* --- FIXED CORNER NAV --- */
+        .fixed-corner {
+            position: fixed;
+            padding: 1.5rem;
+            z-index: 100;
+            font-family: var(--font-mono);
+            font-size: 0.8rem;
+            letter-spacing: 1px;
+            mix-blend-mode: difference;
+            color: white; /* Will invert to black on light bg */
+        }
+
+        .top-left { top: 0; left: 0; }
+        .top-right { top: 0; right: 0; text-align: right; }
+        .bot-left { bottom: 0; left: 0; }
+        .bot-right { bottom: 0; right: 0; }
+
+        /* --- HERO SECTION --- */
+        .hero {
+            height: 100vh;
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            border-bottom: 1px solid var(--ink);
+            position: relative;
+        }
+
+        .hero-text {
+            border-right: 1px solid var(--ink);
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+            padding: 6rem 2rem 2rem 2rem;
+        }
+
+        .hero-title {
+            font-family: var(--font-serif);
+            font-size: 6vw; /* Responsive huge text */
+            line-height: 0.9;
+            font-style: italic;
+        }
+
+        .hero-image {
+            background-color: var(--ink);
+            overflow: hidden;
+            position: relative;
+        }
+
+        .hero-image img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            filter: grayscale(100%);
+            transition: 0.5s;
+        }
+
+        .hero-image:hover img {
+            filter: grayscale(0%);
+            transform: scale(1.05);
+        }
+
+        /* --- SCROLLING TICKER --- */
+        .ticker-wrap {
+            width: 100%;
+            overflow: hidden;
+            background-color: var(--acid);
+            border-bottom: 1px solid var(--ink);
+            padding: 1rem 0;
+            white-space: nowrap;
+        }
+
+        .ticker {
+            display: inline-block;
+            animation: marquee 20s linear infinite;
+            font-family: var(--font-mono);
+            font-weight: bold;
+            font-size: 1.2rem;
+            text-transform: uppercase;
+        }
+
+        @keyframes marquee {
+            0% { transform: translateX(0); }
+            100% { transform: translateX(-100%); }
+        }
+
+        /* --- PROJECT LIST (INDEX STYLE) --- */
+        .project-section {
+            padding: 4rem 2rem;
+        }
+
+        .section-label {
+            font-family: var(--font-mono);
+            margin-bottom: 2rem;
+            display: block;
+            border-bottom: 1px solid var(--ink);
+            padding-bottom: 10px;
+        }
+
+        .project-row {
+            display: grid;
+            grid-template-columns: 0.5fr 2fr 1fr;
+            border-bottom: 1px solid #ccc;
+            padding: 2rem 0;
+            align-items: center;
+            transition: 0.3s;
+        }
+
+        .project-row:hover {
+            background-color: white;
+            padding-left: 2rem; /* Indent effect */
+        }
+
+        .p-num { font-family: var(--font-mono); color: #666; }
+        .p-name { font-size: 3rem; font-family: var(--font-serif); font-style: italic; }
+        .p-cat { text-align: right; font-family: var(--font-mono); font-size: 0.9rem; }
+
+        /* --- IMAGE HOVER REVEAL --- */
+        /* Hidden images that appear when hovering project names */
+        .hover-reveal {
+            position: fixed;
+            width: 300px;
+            height: 400px;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%) scale(0.5);
+            opacity: 0;
+            pointer-events: none;
+            z-index: 50;
+            object-fit: cover;
+            transition: all 0.3s ease;
+            filter: grayscale(100%);
+        }
+
+        .project-row:hover ~ .hover-reveal.active {
+            opacity: 1;
+            transform: translate(-50%, -50%) scale(1) rotate(5deg);
+        }
+
+        /* --- FOOTER --- */
+        footer {
+            background-color: var(--ink);
+            color: var(--bg);
+            padding: 6rem 2rem;
+            text-align: center;
+        }
+
+        .footer-huge {
+            font-size: 10vw;
+            line-height: 0.8;
+            font-family: var(--font-sans);
+            font-weight: 900;
+            text-transform: uppercase;
+            letter-spacing: -5px;
+        }
+
+        .contact-links {
+            margin-top: 3rem;
+            display: flex;
+            justify-content: center;
+            gap: 2rem;
+            font-family: var(--font-mono);
+        }
+
+        .contact-links a {
+            color: var(--acid);
+            text-decoration: none;
+            border: 1px solid var(--acid);
+            padding: 10px 20px;
+            transition: 0.3s;
+        }
+
+        .contact-links a:hover {
+            background: var(--acid);
+            color: var(--ink);
+        }
+
+        /* --- MOBILE --- */
+        @media (max-width: 768px) {
+            .hero { grid-template-columns: 1fr; height: auto; }
+            .hero-text { border-right: none; border-bottom: 1px solid var(--ink); height: 70vh; }
+            .hero-image { height: 50vh; }
+            .project-row { grid-template-columns: 1fr; gap: 0.5rem; }
+            .p-name { font-size: 2rem; }
+            .p-cat { text-align: left; color: #666; }
+            .cursor { display: none; } /* No custom cursor on touch */
+            * { cursor: auto; }
+        }
+    </style>
+</head>
+<body>
+
+    <!-- Custom Cursor -->
+    <div class="cursor"></div>
+
+    <!-- Fixed Corners -->
+    <div class="fixed-corner top-left">Your Name ©2023</div>
+    <div class="fixed-corner top-right" id="clock">00:00:00</div>
+    <div class="fixed-corner bot-left">Scroll ↓</div>
+    <div class="fixed-corner bot-right">Available for hire</div>
+
+    <!-- Hero -->
+    <header class="hero">
+        <div class="hero-text">
+            <div>
+                <p style="font-family: var(--font-mono); margin-bottom: 1rem;">( PORTFOLIO V.3 )</p>
+                <h1 class="hero-title">
+                    Digital<br>
+                    Designer<br>
+                    & Developer
+                </h1>
+            </div>
+            <p style="max-width: 300px; font-size: 0.9rem; line-height: 1.5;">
+                Constructing digital reality through code and chaos. Based in Tokyo/New York. Specializing in brutalist web interfaces.
+            </p>
+        </div>
+        <div class="hero-image">
+            <!-- Replace src with your image -->
+            <img src="https://images.unsplash.com/photo-1492551557933-34265f7af79e?q=80&w=1000&auto=format&fit=crop" alt="Abstract Architecture">
+        </div>
+    </header>
+
+    <!-- Ticker -->
+    <div class="ticker-wrap">
+        <div class="ticker">
+            /// HTML /// CSS /// JAVASCRIPT /// REACT /// WEBGL /// UI/UX /// ART DIRECTION /// PHOTOGRAPHY /// HTML /// CSS /// JAVASCRIPT
+        </div>
+    </div>
+
+    <!-- Projects List -->
+    <section class="project-section">
+        <span class="section-label">SELECTED WORKS (2020-2024)</span>
+
+        <!-- Work 1 -->
+        <div class="project-row" data-img="img1">
+            <span class="p-num">(01)</span>
+            <h2 class="p-name">Neon Genesis</h2>
+            <span class="p-cat">E-Commerce / Shopify</span>
+        </div>
+        <!-- Work 1 Hover Image (Hidden by default) -->
+        <img src="https://images.unsplash.com/photo-1550684848-fac1c5b4e853?w=500" class="hover-reveal" id="img1">
+
+
+        <!-- Work 2 -->
+        <div class="project-row" data-img="img2">
+            <span class="p-num">(02)</span>
+            <h2 class="p-name">Type Foundry</h2>
+            <span class="p-cat">Branding / Identity</span>
+        </div>
+        <!-- Work 2 Hover Image -->
+        <img src="https://images.unsplash.com/photo-1561070791-2526d30994b5?w=500" class="hover-reveal" id="img2">
+
+
+        <!-- Work 3 -->
+        <div class="project-row" data-img="img3">
+            <span class="p-num">(03)</span>
+            <h2 class="p-name">Abstract UI</h2>
+            <span class="p-cat">Experimental / WebGL</span>
+        </div>
+        <!-- Work 3 Hover Image -->
+        <img src="https://images.unsplash.com/photo-1558591710-4b4a1ae0f04d?w=500" class="hover-reveal" id="img3">
+
+    </section>
+
+    <!-- Footer -->
+    <footer>
+        <div class="footer-huge">
+            LET'S WORK<br>TOGETHER
+        </div>
+        <div class="contact-links hover-trigger">
+            <a href="mailto:test@test.com">Email Me</a>
+            <a href="#">Instagram</a>
+            <a href="#">LinkedIn</a>
+        </div>
+    </footer>
+
+    <script>
+        // --- 1. Custom Cursor Logic ---
+        const cursor = document.querySelector('.cursor');
+        
+        document.addEventListener('mousemove', (e) => {
+            cursor.style.left = e.clientX + 'px';
+            cursor.style.top = e.clientY + 'px';
+        });
+
+        // Add 'grow' class to cursor when hovering specific elements
+        const hoverables = document.querySelectorAll('a, .project-row, .hero-image');
+        hoverables.forEach(el => {
+            el.addEventListener('mouseenter', () => cursor.classList.add('grow'));
+            el.addEventListener('mouseleave', () => cursor.classList.remove('grow'));
+        });
+
+        // --- 2. Clock Logic ---
+        function updateTime() {
+            const now = new Date();
+            const timeString = now.toLocaleTimeString('en-US', { hour12: false });
+            document.getElementById('clock').textContent = timeString;
+        }
+        setInterval(updateTime, 1000);
+        updateTime();
+
+        // --- 3. Image Reveal Logic ---
+        const rows = document.querySelectorAll('.project-row');
+        
+        rows.forEach(row => {
+            row.addEventListener('mouseenter', () => {
+                const imgId = row.getAttribute('data-img');
+                const img = document.getElementById(imgId);
+                if(img) img.classList.add('active');
+            });
+
+            row.addEventListener('mouseleave', () => {
+                const imgId = row.getAttribute('data-img');
+                const img = document.getElementById(imgId);
+                if(img) img.classList.remove('active');
+            });
+            
+            // Optional: Move image with cursor inside the row
+            row.addEventListener('mousemove', (e) => {
+                const imgId = row.getAttribute('data-img');
+                const img = document.getElementById(imgId);
+                if(img) {
+                    // Slight offset to make it follow
+                    img.style.left = e.clientX + 'px';
+                    img.style.top = e.clientY + 'px';
+                }
+            });
+        });
+    </script>
+</body>
+</html>
